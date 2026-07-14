@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Session Report</title>
+  <style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d1b2a;--ink-2:#2d3f52;--ink-3:#6b7f93;
+  --surface:#fff;--surf-2:#f3f6fa;--border:#dde3ec;
+  --blue:#2563eb;--blue-lt:#dbeafe;--green:#16a34a;--green-lt:#dcfce7;
+  --amber:#d97706;--amber-lt:#fef3c7;--red:#dc2626;--red-lt:#fee2e2;--purple:#7c3aed;
+  --r-sm:6px;--r-md:12px;--r-lg:18px;
+  --font:'Inter',-apple-system,sans-serif;--mono:'JetBrains Mono',monospace;
+}
+*{font-family:var(--font)}
+body{min-height:100vh;background:var(--surf-2);padding-bottom:60px;}
+.hidden{display:none!important;}
+.wrap{max-width:800px;margin:0 auto;padding:28px 20px;}
+.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;}
+.back{font-size:13px;color:var(--blue);text-decoration:none;}
+.btn-print{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:6px 14px;font-size:13px;cursor:pointer;color:var(--ink);}
+
+/* Loader */
+.loader{display:flex;flex-direction:column;align-items:center;gap:16px;padding:80px 0;text-align:center;}
+.loader-ring{width:44px;height:44px;border-radius:50%;border:4px solid var(--border);border-top-color:var(--blue);animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loader p{color:var(--ink-3);font-size:14px;}
+
+/* Header */
+.rpt-head{margin-bottom:20px;}
+.rpt-head h1{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.4px;}
+.rpt-meta{font-size:13px;color:var(--ink-3);margin-top:5px;}
+
+/* Hero score */
+.hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:26px;margin-bottom:14px;display:flex;align-items:center;gap:28px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.score-wrap{position:relative;width:120px;height:120px;flex-shrink:0;}
+.score-svg{width:120px;height:120px;transform:rotate(-90deg);}
+.ring-bg{fill:none;stroke:var(--border);stroke-width:9;}
+.ring-fill{fill:none;stroke:var(--green);stroke-width:9;stroke-linecap:round;stroke-dasharray:377;stroke-dashoffset:377;transition:stroke-dashoffset 1.4s ease;}
+.score-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.score-grade{font-size:28px;font-weight:900;color:var(--ink);}
+.score-num{font-size:12px;color:var(--ink-3);font-weight:600;}
+.hero-text{flex:1;}
+.hero-label{font-size:20px;font-weight:800;color:var(--ink);margin-bottom:7px;}
+.hero-feedback{font-size:13px;color:var(--ink-2);line-height:1.65;margin-bottom:12px;}
+.hero-chips{display:flex;gap:7px;flex-wrap:wrap;}
+.chip{font-size:12px;font-weight:700;border-radius:20px;padding:4px 11px;}
+.chip-g{background:var(--green-lt);color:var(--green);}
+.chip-r{background:var(--red-lt);color:var(--red);}
+.chip-b{background:var(--blue-lt);color:var(--blue);}
+
+/* Dimensions */
+.dims{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:22px;margin-bottom:14px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.dims h3{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:14px;}
+.dim-row{margin-bottom:12px;}
+.dim-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;}
+.dim-name{font-size:13px;color:var(--ink-2);}
+.dim-score{font-size:13px;font-weight:700;}
+.dim-track{height:7px;background:var(--surf-2);border-radius:4px;overflow:hidden;}
+.dim-fill{height:100%;border-radius:4px;transition:width 1.1s ease;}
+
+/* Agent analysis */
+.agent-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-bottom:14px;}
+.ag-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:12px 10px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.ag-avatar{font-size:28px;margin-bottom:5px;}
+.ag-name{font-size:12px;font-weight:700;color:var(--ink);margin-bottom:6px;}
+.ag-text{font-size:11px;color:var(--ink-3);line-height:1.5;}
+
+/* Moments */
+.moments{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.moment{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.moment.best{border-top:3px solid var(--green);}
+.moment.worst{border-top:3px solid var(--amber);}
+.m-icon{font-size:22px;margin-bottom:5px;}
+.m-label{font-size:10px;font-weight:700;color:var(--ink-3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:5px;}
+.m-text{font-size:12px;color:var(--ink-2);line-height:1.55;}
+
+/* 2-col */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-md);padding:16px;box-shadow:0 1px 4px rgba(0,0,0,.05);}
+.card h4{font-size:13px;font-weight:700;color:var(--ink);margin-bottom:9px;}
+.card ul{list-style:none;display:flex;flex-direction:column;gap:6px;}
+.card ul li{font-size:12px;color:var(--ink-2);padding-left:13px;position:relative;line-height:1.5;}
+.card ul li::before{content:"→";position:absolute;left:0;color:var(--ink-3);}
+.card.full{margin-bottom:14px;}
+
+/* Recommendations */
+.rec{background:var(--blue-lt);border-left:3px solid var(--blue);border-radius:0 5px 5px 0;padding:8px 11px;font-size:13px;color:#1e40af;margin-bottom:7px;line-height:1.5;}
+
+/* Event log */
+.log-item{border:1px solid var(--border);border-radius:var(--r-md);margin-bottom:9px;overflow:hidden;}
+.log-hdr{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--surf-2);border-bottom:1px solid var(--border);}
+.log-num{width:22px;height:22px;border-radius:50%;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.log-emoji{font-size:18px;flex-shrink:0;}
+.log-headline{flex:1;font-size:12px;font-weight:600;color:var(--ink);}
+.log-badge{font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;flex-shrink:0;}
+.log-body{padding:10px 13px;display:flex;flex-direction:column;gap:5px;}
+.log-said{font-size:12px;color:var(--ink-2);font-style:italic;padding:5px 9px;background:var(--surf-2);border-radius:var(--r-sm);border-left:3px solid var(--blue);}
+.log-fb{font-size:11px;color:var(--ink-3);line-height:1.5;}
+
+/* Actions */
+.actions{display:flex;gap:10px;margin-top:8px;}
+.btn-new{flex:1;background:var(--ink);color:#fff;border:none;border-radius:var(--r-sm);padding:13px 0;font-size:14px;font-weight:700;cursor:pointer;text-align:center;text-decoration:none;display:block;}
+.btn-new:hover{background:#1e3a5f;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="topbar">
+    <a href="/" class="back">← New Session</a>
+    <button class="btn-print" onclick="window.print()">🖨 Print</button>
+  </div>
+
+  <div id="loader" class="loader">
+    <div class="loader-ring"></div>
+    <p>Claude is analysing your session…</p>
+  </div>
+
+  <div id="report" class="hidden">
+    <div class="rpt-head">
+      <h1>Instructor Performance Report</h1>
+      <div class="rpt-meta" id="rptMeta"></div>
+    </div>
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="score-wrap">
+        <svg class="score-svg" viewBox="0 0 140 140">
+          <circle class="ring-bg" cx="70" cy="70" r="60"/>
+          <circle class="ring-fill" id="ringFill" cx="70" cy="70" r="60"/>
+        </svg>
+        <div class="score-inner">
+          <span class="score-grade" id="scoreGrade">–</span>
+          <span class="score-num"  id="scoreNum">–</span>
+        </div>
+      </div>
+      <div class="hero-text">
+        <div class="hero-label" id="heroLabel">–</div>
+        <div class="hero-feedback" id="heroFeedback">–</div>
+        <div class="hero-chips">
+          <span class="chip chip-b" id="chipTotal">–</span>
+          <span class="chip chip-g" id="chipAvg">–</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dimensions -->
+    <div class="dims">
+      <h3>Performance Dimensions</h3>
+      <div id="dimGrid"></div>
+    </div>
+
+    <!-- Per-agent analysis -->
+    <div class="agent-grid" id="agentGrid"></div>
+
+    <!-- Moments -->
+    <div class="moments">
+      <div class="moment best"><div class="m-icon">🌟</div><div class="m-label">Best Moment</div><div class="m-text" id="bestMoment">–</div></div>
+      <div class="moment worst"><div class="m-icon">⚠️</div><div class="m-label">Needs Work</div><div class="m-text" id="worstMoment">–</div></div>
+    </div>
+
+    <!-- Strengths + Improvements -->
+    <div class="two-col">
+      <div class="card"><h4>✅ Strengths</h4><ul id="ulStrengths"></ul></div>
+      <div class="card"><h4>⚠️ Improvements</h4><ul id="ulImprov"></ul></div>
+    </div>
+
+    <!-- Recommendations -->
+    <div class="card full"><h4>💡 Recommendations</h4><div id="divRecs"></div></div>
+
+    <!-- Event replay -->
+    <div class="card full"><h4>📋 Event Replay</h4><div id="eventLog"></div></div>
+
+    <div class="actions">
+      <a href="/" class="btn-new">🔄 Start New Session</a>
+    </div>
+  </div>
+</div>
+<script>
+const AGENT_AVATARS = {rohit:"😤",priya:"🤓",arjun:"😕",sneha:"🤫",vikram:"😤"};
+const AGENT_NAMES   = {rohit:"Rohit",priya:"Priya",arjun:"Arjun",sneha:"Sneha",vikram:"Vikram"};
+const DIMS_META = [
+  {key:"classroom_management",label:"🏫 Classroom Management"},
+  {key:"communication",       label:"🎤 Communication"},
+  {key:"student_engagement",  label:"👥 Student Engagement"},
+  {key:"crisis_handling",     label:"⚡ Crisis Handling"},
+  {key:"content_delivery",    label:"📚 Content Delivery"},
+];
+function scoreColor(v){return v>=80?"#16a34a":v>=60?"#d97706":"#dc2626";}
+function fmt(s){return Math.floor(s/60)+"m "+String(s%60).padStart(2,"0")+"s";}
+
+async function load(){
+  try{
+    const res=await fetch("/api/report-data");
+    const d=await res.json();
+    if(!d.overall_score){
+      document.getElementById("loader").innerHTML="<p style='color:#dc2626'>No report found. <a href='/'>Start a new session →</a></p>";
+      return;
+    }
+    render(d);
+  }catch(e){
+    document.getElementById("loader").innerHTML=`<p style='color:#dc2626'>Error: ${e.message}</p>`;
+  }
+}
+
+function render(d){
+  const s=d.session;
+  document.getElementById("rptMeta").textContent=`📚 ${s.subject}  •  ⏱ ${fmt(s.duration)}  •  ⚡ ${s.total_events} events  •  ⭐ avg ${s.avg_score}/10`;
+
+  // Ring
+  const circ=2*Math.PI*60;
+  const col=scoreColor(d.overall_score);
+  const ring=document.getElementById("ringFill");
+  ring.style.stroke=col;
+  ring.style.strokeDasharray=circ;
+  ring.style.strokeDashoffset=circ;
+  setTimeout(()=>ring.style.strokeDashoffset=circ*(1-d.overall_score/100),100);
+  document.getElementById("scoreGrade").textContent=d.grade||"B";
+  document.getElementById("scoreGrade").style.color=col;
+  document.getElementById("scoreNum").textContent=d.overall_score+"/100";
+  document.getElementById("heroLabel").textContent=d.grade_label||"";
+  document.getElementById("heroFeedback").textContent=d.overall_feedback||"";
+  document.getElementById("chipTotal").textContent=s.total_events+" events";
+  document.getElementById("chipAvg").textContent="avg "+s.avg_score+"/10";
+
+  // Dims
+  const dg=document.getElementById("dimGrid");
+  DIMS_META.forEach(({key,label})=>{
+    const v=(d.dimension_scores||{})[key]||0;
+    const c=scoreColor(v);
+    const el=document.createElement("div");el.className="dim-row";
+    el.innerHTML=`<div class="dim-top"><span class="dim-name">${label}</span><span class="dim-score" style="color:${c}">${v}%</span></div><div class="dim-track"><div class="dim-fill" style="width:0%;background:${c}" data-w="${v}"></div></div>`;
+    dg.appendChild(el);
+  });
+  setTimeout(()=>document.querySelectorAll(".dim-fill").forEach(el=>el.style.width=el.dataset.w+"%"),120);
+
+  // Agent analysis
+  const ag=document.getElementById("agentGrid");
+  const aa=d.agent_analysis||{};
+  Object.keys(AGENT_NAMES).forEach(id=>{
+    const el=document.createElement("div");el.className="ag-card";
+    el.innerHTML=`<div class="ag-avatar">${AGENT_AVATARS[id]}</div><div class="ag-name">${AGENT_NAMES[id]}</div><div class="ag-text">${aa[id]||"–"}</div>`;
+    ag.appendChild(el);
+  });
+
+  // Moments
+  document.getElementById("bestMoment").textContent=d.best_moment||"–";
+  document.getElementById("worstMoment").textContent=d.worst_moment||"–";
+
+  // Lists
+  const us=document.getElementById("ulStrengths");
+  (d.strengths||[]).forEach(t=>{const li=document.createElement("li");li.textContent=t;us.appendChild(li);});
+  const ui=document.getElementById("ulImprov");
+  (d.improvements||[]).forEach(t=>{const li=document.createElement("li");li.textContent=t;ui.appendChild(li);});
+
+  // Recs
+  const dr=document.getElementById("divRecs");
+  (d.recommendations||[]).forEach(r=>{const el=document.createElement("div");el.className="rec";el.textContent=r;dr.appendChild(el);});
+
+  // Event log
+  const el2=document.getElementById("eventLog");
+  if(!s.events||s.events.length===0){el2.innerHTML="<p style='color:#9ca3af;font-size:13px'>No events were handled.</p>";return;}
+  s.events.forEach((ev,i)=>{
+    const sc=ev.score||0,col=scoreColor(sc*10);
+    const el=document.createElement("div");el.className="log-item";
+    el.innerHTML=`
+      <div class="log-hdr">
+        <span class="log-num">${i+1}</span>
+        <span class="log-emoji">${ev.emoji||"⚡"}</span>
+        <span class="log-headline">${ev.headline||""}</span>
+        <span class="log-badge" style="background:${col}22;color:${col}">${sc}/10 · ${ev.rating||""}</span>
+      </div>
+      <div class="log-body">
+        <div class="log-said">"${ev.instructor_response||""}"</div>
+        <div class="log-fb">✓ ${ev.what_worked||""}  •  ↑ ${ev.what_to_improve||""}</div>
+      </div>`;
+    el2.appendChild(el);
+  });
+
+  document.getElementById("loader").classList.add("hidden");
+  document.getElementById("report").classList.remove("hidden");
+}
+document.addEventListener("DOMContentLoaded",load);
+</script>
+</body>
+</html>

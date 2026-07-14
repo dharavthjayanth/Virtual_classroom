@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Classroom Simulator v3</title>
+  <style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#0d1b2a;--ink-2:#2d3f52;--ink-3:#6b7f93;
+  --surface:#fff;--surf-2:#f3f6fa;--border:#dde3ec;
+  --blue:#2563eb;--blue-lt:#dbeafe;--green:#16a34a;--green-lt:#dcfce7;
+  --red:#dc2626;--red-lt:#fee2e2;--amber:#d97706;
+  --r-sm:6px;--r-md:12px;--r-lg:18px;
+  --font:'Inter',-apple-system,sans-serif;
+}
+*{font-family:var(--font)}
+body{min-height:100vh;background:linear-gradient(135deg,#0d1b2a 0%,#1a3050 60%,#0d2540 100%);display:flex;align-items:center;justify-content:center;padding:32px 16px;}
+.wrap{width:100%;max-width:620px;}
+.hero{text-align:center;margin-bottom:28px;}
+.hero-icon{font-size:56px;margin-bottom:12px;display:block;}
+.hero h1{font-size:28px;font-weight:800;color:#fff;letter-spacing:-.5px;margin-bottom:8px;}
+.hero p{font-size:14px;color:#94a3b8;max-width:480px;margin:0 auto;line-height:1.6}
+
+/* Agents preview */
+.agents-preview{display:flex;justify-content:center;gap:14px;margin-bottom:28px;flex-wrap:wrap;}
+.ap-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:var(--r-md);padding:12px 14px;text-align:center;width:96px;}
+.ap-avatar{font-size:28px;margin-bottom:4px;}
+.ap-name{font-size:12px;font-weight:700;color:#e2e8f0;}
+.ap-role{font-size:10px;color:#64748b;margin-top:2px;}
+
+.card{background:var(--surface);border-radius:var(--r-lg);padding:28px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+
+.field{display:flex;flex-direction:column;gap:5px;margin-bottom:16px;}
+.field label{font-size:13px;font-weight:600;color:var(--ink-2);}
+.req{color:var(--red)}.opt{color:var(--ink-3);font-weight:400;font-size:11px;}
+.field-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+input,select,textarea{padding:10px 12px;border:1.5px solid var(--border);border-radius:var(--r-sm);font-size:14px;color:var(--ink);background:var(--surface);width:100%;transition:border-color .15s;}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-lt);}
+textarea{resize:vertical;}
+
+.slide-tabs{display:flex;gap:6px;margin-bottom:10px;}
+.slide-tab{flex:1;padding:8px 0;border:1.5px solid var(--border);border-radius:var(--r-sm);background:var(--surf-2);font-size:13px;font-weight:600;color:var(--ink-3);cursor:pointer;transition:all .2s;}
+.slide-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.url-hints{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.hint-tag{font-size:11px;background:var(--blue-lt);color:var(--blue);border-radius:20px;padding:3px 10px;font-weight:600;}
+.url-preview{display:flex;align-items:center;gap:8px;background:var(--green-lt);border:1px solid #86efac;border-radius:var(--r-sm);padding:8px 12px;font-size:13px;color:#166534;margin-top:8px;}
+.url-preview.hidden{display:none;}
+#urlPreviewText{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.url-clear{background:none;border:none;cursor:pointer;color:#166534;font-size:14px;}
+.file-drop{display:flex;flex-direction:column;align-items:center;gap:4px;border:2px dashed var(--border);border-radius:var(--r-md);padding:20px;cursor:pointer;transition:all .2s;text-align:center;}
+.file-drop:hover{border-color:var(--blue);background:var(--blue-lt);}
+.file-drop.uploaded{border-color:var(--green);background:var(--green-lt);}
+.drop-icon{font-size:28px;}.drop-text{font-size:13px;font-weight:600;color:var(--ink-2);}.drop-sub{font-size:11px;color:var(--ink-3);}
+
+.divider{border:none;border-top:1px solid var(--border);margin:4px 0 20px;}
+.err-msg{background:var(--red-lt);border:1px solid #fca5a5;color:var(--red);border-radius:var(--r-sm);padding:10px 12px;font-size:13px;margin-bottom:14px;}
+.hidden{display:none!important;}
+.btn-start{width:100%;background:var(--ink);color:#fff;border:none;border-radius:var(--r-sm);padding:14px 0;font-size:15px;font-weight:700;cursor:pointer;transition:background .2s;}
+.btn-start:hover{background:#1e3a5f;}
+.btn-start:disabled{background:#cbd5e1;cursor:not-allowed;}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <span class="hero-icon">🏫</span>
+    <h1>Virtual Classroom Simulator</h1>
+    <p>5 AI student agents with real personalities. They react to everything you say — handle arguments, confusion, distractions and more.</p>
+  </div>
+
+  <!-- Agent preview -->
+  <div class="agents-preview">
+    <div class="ap-card"><div class="ap-avatar">😤</div><div class="ap-name">Rohit</div><div class="ap-role">Distracted</div></div>
+    <div class="ap-card"><div class="ap-avatar">🤓</div><div class="ap-name">Priya</div><div class="ap-role">Overachiever</div></div>
+    <div class="ap-card"><div class="ap-avatar">😕</div><div class="ap-name">Arjun</div><div class="ap-role">Confused</div></div>
+    <div class="ap-card"><div class="ap-avatar">🤫</div><div class="ap-name">Sneha</div><div class="ap-role">Whisperer</div></div>
+    <div class="ap-card"><div class="ap-avatar">😤</div><div class="ap-name">Vikram</div><div class="ap-role">Challenger</div></div>
+  </div>
+
+  <div class="card">
+    <form id="setupForm" novalidate>
+      <div class="field">
+        <label>Subject / Topic <span class="req">*</span></label>
+        <input id="subject" type="text" placeholder="e.g. Introduction to APIs and REST" required/>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Duration</label>
+          <select id="duration">
+            <option value="15">15 min</option>
+            <option value="30" selected>30 min</option>
+            <option value="45">45 min</option>
+            <option value="60">60 min</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Difficulty</label>
+          <select id="difficulty">
+            <option value="easy">Easy</option>
+            <option value="medium" selected>Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Student Type</label>
+          <select id="studentType">
+            <option value="highschool">Jr. College</option>
+            <option value="undergraduate" selected>Undergraduate</option>
+            <option value="advanced">Advanced</option>
+          </select>
+        </div>
+      </div>
+      <div class="field">
+        <label>Learning Objectives <span class="req">*</span></label>
+        <textarea id="objectives" rows="2" placeholder="e.g. Students will understand what APIs are, how REST works, and be able to make a basic API call" required></textarea>
+      </div>
+
+      <hr class="divider"/>
+
+      <div class="field">
+        <label>Presentation Slides <span class="opt">(optional)</span></label>
+        <div class="slide-tabs">
+          <button type="button" class="slide-tab active" id="tabLink" onclick="switchTab('link')">🔗 Paste Link</button>
+          <button type="button" class="slide-tab" id="tabFile" onclick="switchTab('file')">📁 Upload File</button>
+        </div>
+        <div id="panelLink">
+          <input id="slideUrl" type="url" placeholder="Paste Google Slides URL or the full &lt;iframe&gt; embed code…"/>
+          <div class="url-hints">
+            <span class="hint-tag">Google Slides</span>
+            <span class="hint-tag">PowerPoint Online</span>
+            <span class="hint-tag">Canva</span>
+          </div>
+          <div id="urlPreview" class="url-preview hidden">
+            <span>🔗</span><span id="urlPreviewText"></span>
+            <button type="button" onclick="clearUrl()" class="url-clear">✕</button>
+          </div>
+        </div>
+        <div id="panelFile" class="hidden">
+          <label class="file-drop" id="fileDropZone">
+            <input type="file" id="slidesFile" accept=".pdf,.ppt,.pptx" style="display:none"/>
+            <span class="drop-icon">📑</span>
+            <span class="drop-text" id="dropText">Click to upload</span>
+            <span class="drop-sub">PDF · PPT · PPTX</span>
+          </label>
+        </div>
+      </div>
+
+      <div id="errMsg" class="err-msg hidden"></div>
+      <button type="submit" id="startBtn" class="btn-start">
+        <span id="btnLabel">Enter Classroom →</span>
+        <span id="btnLoading" class="hidden">Setting up agents…</span>
+      </button>
+    </form>
+  </div>
+</div>
+<script>
+function switchTab(tab){
+  document.getElementById("panelLink").classList.toggle("hidden", tab!=="link");
+  document.getElementById("panelFile").classList.toggle("hidden", tab!=="file");
+  document.getElementById("tabLink").classList.toggle("active", tab==="link");
+  document.getElementById("tabFile").classList.toggle("active", tab==="file");
+}
+document.getElementById("slideUrl").addEventListener("input",function(){
+  const v=this.value.trim();
+  const prev=document.getElementById("urlPreview");
+  if(v.startsWith("http")){
+    let label=v;
+    if(v.includes("docs.google.com")) label="✓ Google Slides detected";
+    else if(v.includes("onedrive"))   label="✓ OneDrive / PowerPoint Online";
+    else if(v.includes("canva.com"))  label="✓ Canva presentation";
+    else{ try{label="✓ "+new URL(v).hostname;}catch{} }
+    document.getElementById("urlPreviewText").textContent=label;
+    prev.classList.remove("hidden");
+  } else prev.classList.add("hidden");
+});
+function clearUrl(){
+  document.getElementById("slideUrl").value="";
+  document.getElementById("urlPreview").classList.add("hidden");
+}
+document.getElementById("slidesFile").addEventListener("change",function(){
+  if(this.files.length>0){
+    document.getElementById("fileDropZone").classList.add("uploaded");
+    document.getElementById("dropText").textContent="✓ "+this.files[0].name;
+  }
+});
+document.getElementById("setupForm").addEventListener("submit",async(e)=>{
+  e.preventDefault();
+  const subject=document.getElementById("subject").value.trim();
+  const objectives=document.getElementById("objectives").value.trim();
+  const errEl=document.getElementById("errMsg");
+  if(!subject||!objectives){errEl.textContent="Please fill Subject and Objectives.";errEl.classList.remove("hidden");return;}
+  errEl.classList.add("hidden");
+  const btn=document.getElementById("startBtn");
+  document.getElementById("btnLabel").classList.add("hidden");
+  document.getElementById("btnLoading").classList.remove("hidden");
+  btn.disabled=true;
+  // Get URL — also handle if user pasted full <iframe> tag
+  let rawSlide = document.getElementById("slideUrl").value.trim();
+  if(rawSlide.includes("<iframe")){
+    const m = rawSlide.match(/src=["']([^"']+)["']/);
+    rawSlide = m ? m[1] : "";
+  }
+  const slideUrl = rawSlide;
+  const slideEmbedUrl = rawSlide || null;
+  const payload={subject,duration:document.getElementById("duration").value,difficulty:document.getElementById("difficulty").value,studentType:document.getElementById("studentType").value,objectives,slideUrl:slideUrl||null,slideEmbedUrl};
+  sessionStorage.setItem("sessionConfig",JSON.stringify(payload));
+  try{
+    const res=await fetch("/api/start",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.ok) window.location.href="/session";
+    else throw new Error("Server error");
+  }catch(err){
+    errEl.textContent="Error: "+err.message;errEl.classList.remove("hidden");
+    document.getElementById("btnLabel").classList.remove("hidden");
+    document.getElementById("btnLoading").classList.add("hidden");
+    btn.disabled=false;
+  }
+});
+</script>
+</body>
+</html>
